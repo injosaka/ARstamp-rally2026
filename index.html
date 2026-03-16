@@ -89,14 +89,6 @@
         .stamp-color-11 { background: #f0f0ff; } /* 青 */
         .stamp-color-12 { background: #f8f0ff; } /* 紫 */
 
-        #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
-        .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
-        .admin-btn-group { display: flex; gap: 5px; }
-        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
-        .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
-        .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
-        .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
-
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
@@ -114,7 +106,7 @@
 
 <div class="container">
     <div class="title-image-container">
-        <img src="./img/logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
+       <img src="./img/logo.png" alt="Logo" class="title-image">
     </div>
 
     <div class="guide-link-container">
@@ -217,15 +209,6 @@
         </div>
     </div>
 
-    <div id="admin-panel">
-        <strong>🔧 管理者モード</strong><br>
-        <div id="current-gps-info" style="margin-bottom:10px;">GPS取得中...</div>
-        <div id="admin-list-container"></div>
-        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:15px; font-size:12px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
-        <textarea id="export-area" class="export-area"></textarea>
-        <button class="admin-btn" style="background:#444; width:100%; margin-top:10px;" onclick="location.reload()">🔄 画面を更新して反映</button>
-        <button class="admin-btn" style="background:#a22; width:100%; margin-top:20px;" onclick="resetAdminCoords()">全データ完全初期化</button>
-    </div>
 </div>
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
@@ -326,7 +309,6 @@
         applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
-        const adminContainer = document.getElementById('admin-list-container');
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
@@ -342,41 +324,6 @@
                 div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
                 gridMain.appendChild(div);
             }
-
-            const row = document.createElement('div');
-            row.className = 'admin-row';
-            row.innerHTML = `<div>[${id}] ${targets[id].name}</div>`;
-            const group = document.createElement('div');
-            group.className = 'admin-btn-group';
-
-            if (id === "1") {
-                ["A", "B", "C"].forEach((label, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'admin-btn';
-                    btn.innerText = `登録-${label}`;
-                    btn.onclick = () => saveLoc('1', idx);
-                    group.appendChild(btn);
-                });
-            } else {
-                const btn = document.createElement('button');
-                btn.className = 'admin-btn';
-                btn.innerText = `現在地を登録`;
-                btn.onclick = () => saveLoc(id);
-                group.appendChild(btn);
-            }
-            const acquireBtn = document.createElement('button');
-            acquireBtn.className = 'admin-btn acquire-item-btn';
-            acquireBtn.innerText = '取得済み';
-            acquireBtn.onclick = () => acquireSingleStamp(id);
-            group.appendChild(acquireBtn);
-
-            const resetBtn = document.createElement('button');
-            resetBtn.className = 'admin-btn reset-item-btn';
-            resetBtn.innerText = '解除';
-            resetBtn.onclick = () => resetSingleStamp(id);
-            group.appendChild(resetBtn);
-            row.appendChild(group);
-            adminContainer.appendChild(row);
         }
         
         const center = targets["1"].locations[0];
@@ -610,7 +557,7 @@
             document.getElementById('enquete-complete').style.display = 'none';
         }
     }
-
+//ここから？
     function saveLoc(id, idx = null) {
         if (!currentLat) return;
         const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
