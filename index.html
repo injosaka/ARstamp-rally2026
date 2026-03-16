@@ -1,29 +1,4 @@
 <!DOCTYPE html>
-<!-- ============================================================
-     St. Patrick's Stamp Rally
-     Version: 2026-03-15
-     Timestamp: 20260315-120000
-     Changes: スポット名称更新 / 画像パスをimg/AR_info/に変更
-              モーダルタブでアイルランド説明文も切り替え対応（descriptionIreland）
-              ノベルティスライドをポストカード・ステッカーの2つに分割
-              協賛店舗（スポット1・2）に営業時間連動ピン色変更・時間外タップ不可機能追加
-              地図ピンのバグ修正（stamps未定義）
-              地図下に凡例追加
-              スポット03表題を「妖精のダンス」に変更
-              各スポットに日本語説明文追加（03〜13番）
-              モーダルタブ順序変更（アイルランド左・デフォルト表示）
-              タブ「現地」→「ラリースポット」に変更
-              壁紙A（3スタンプ）・壁紙B（ゴール）ダウンロードエリア追加
-              全スポット（01〜12番）のアイルランドタブ説明文追加
-              ゴール解放モーダルにコンプリートメッセージ追加・ARリンク削除
-              ゴール取得後にスタンプページへARボタン表示
-              アンケートをコンプ前後で表示切り替え（ムービー・試飲特典訴求）
-              ノベルティ文言をユーザー目線に変更
-              壁紙A・B URL設定済み
-              全13スポットARURL個別設定
-              スポット6にイベント起源エピソード追加
-              ゴール(13番)アイルランドタブ追加（セント・パトリックスデー説明）
-     ============================================================ -->
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -89,6 +64,8 @@
         .stamp-color-11 { background: #f0f0ff; } /* 青 */
         .stamp-color-12 { background: #f8f0ff; } /* 紫 */
 
+        /* 【削除メモ】ここに管理パネル用のCSS(#admin-panel等)がありましたが、削除しました。 */
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
@@ -106,7 +83,7 @@
 
 <div class="container">
     <div class="title-image-container">
-       <img src="./img/logo.png" alt="Logo" class="title-image">
+        <img src="./img/logo.png" alt="Logo" class="title-image">
     </div>
 
     <div class="guide-link-container">
@@ -134,7 +111,6 @@
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
 
-    <!-- 壁紙A（3スタンプ達成で表示） -->
     <div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
         <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
         <a id="wallpaper-a-link" href="#" target="_blank"
@@ -143,7 +119,6 @@
         </a>
     </div>
 
-    <!-- 壁紙B（ゴール達成で表示） -->
     <div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
         <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
         <a id="wallpaper-b-link" href="#" target="_blank"
@@ -152,11 +127,9 @@
         </a>
     </div>
 
-    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
     <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
         <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:12px;">🎁 スタッフにこの画面を見せてください<br><small style="color:#e05000;">※ご自身でスライドすると無効になります</small></p>
 
-        <!-- ポストカード -->
         <p style="font-size:0.8rem; color:#777; margin: 4px 0 4px 8px;">🌈 アイルランドポストカード（先着300名）</p>
         <div id="postcard-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden; margin-bottom:6px;">
             <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
@@ -171,7 +144,6 @@
             ✅ ポストカード渡し済み
         </div>
 
-        <!-- ステッカー -->
         <p style="font-size:0.8rem; color:#777; margin: 12px 0 4px 8px;">🍀 オリジナルステッカー（先着300名）<br><small style="color:#777;">※このイベントのSNS投稿が必要です</small></p>
         <div id="sticker-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
             <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
@@ -187,16 +159,13 @@
         </div>
     </div>
 
-    <!-- アンケートリンク -->
     <div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
-        <!-- コンプ前 -->
         <div id="enquete-normal">
             <a href="https://forms.gle/iEag73ASS7dijyzs7" target="_blank"
                style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
                 📝 アンケートに答える
             </a>
         </div>
-        <!-- コンプ後 -->
         <div id="enquete-complete" style="display:none;">
             <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
                 🎬 アンケートにご回答いただいたメールアドレスに、スペシャルムービーのリンクを後日お送りします！<br><br>
@@ -209,7 +178,7 @@
         </div>
     </div>
 
-</div>
+    </div>
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
 
@@ -292,23 +261,16 @@
     const storageKey = 'rally_v2026_final';
     const GOAL_ID = "13";
     const REQUIRED_COUNT = 7;
-    let tapCount = 0;
+    /* 【削除メモ】tapCount変数を削除しました。 */
     let currentLat, currentLng;
 
-    function applyAdminOffsets() {
-        const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
-        for (let id in customCoords) {
-            if (targets[id]) {
-                if (customCoords[id].locations) targets[id].locations = customCoords[id].locations;
-                else { targets[id].lat = customCoords[id].lat; targets[id].lng = customCoords[id].lng; }
-            }
-        }
-    }
+    /* 【削除メモ】ここに座標調整関数(applyAdminOffsets)がありましたが、削除しました。 */
 
     function init() {
-        applyAdminOffsets();
+        /* 【削除メモ】座標調整の実行(applyAdminOffsets())を削除しました。 */
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
+        /* 【削除メモ】管理者用コンテナ取得変数を削除しました。 */
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
@@ -324,6 +286,8 @@
                 div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
                 gridMain.appendChild(div);
             }
+
+            /* 【削除メモ】ここにあった管理者用ボタン生成(row/group/saveLoc等)のループ処理を削除しました。 */
         }
         
         const center = targets["1"].locations[0];
@@ -363,7 +327,7 @@
             pos => {
                 currentLat = pos.coords.latitude;
                 currentLng = pos.coords.longitude;
-                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+                /* 【削除メモ】管理者用デバッグ表示を削除しました。 */
 
                 // 現在地マーカーを更新（初回は作成、2回目以降は移動）
                 if (userMarker) {
@@ -380,7 +344,7 @@
                 }
             },
             err => {
-                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
+                /* 【削除メモ】GPS失敗デバッグ表示を削除しました。 */
             },
             opt
         );
@@ -558,6 +522,121 @@
         }
     }
 
+    /* 【削除メモ】ここに管理者用関数(saveLoc, acquireSingleStamp, resetSingleStamp, exportSettings, adminTrigger, resetAdminCoords)がありましたが、削除しました。 */
+
+    let currentModalId = null;
+
+    function openModal(id) {
+        currentModalId = id;
+        document.getElementById('modalTitle').innerHTML = targets[id].name;
+        document.getElementById('modalImg').src = targets[id].imgUrl;
+        document.getElementById('modalImgIreland').src = targets[id].imgIreland || '';
+        const hasIreland = targets[id].imgIreland && targets[id].imgIreland !== "";
+        document.getElementById('modal-tabs').style.display = hasIreland ? 'flex' : 'none';
+        switchTab('ireland');
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+
+    function switchTab(tab) {
+        const isLocal = tab === 'local';
+        const t = currentModalId ? targets[currentModalId] : null;
+
+        // 画像切り替え
+        document.getElementById('modalImg').style.display        = isLocal ? 'block' : 'none';
+        document.getElementById('modalImgIreland').style.display = isLocal ? 'none'  : 'block';
+
+        // 本文切り替え（descriptionIrelandがあれば使う、なければdescriptionを流用）
+        if (t) {
+            const body = !isLocal && t.descriptionIreland
+                ? t.descriptionIreland
+                : t.description;
+            document.getElementById('modalBody').innerHTML = body;
+        }
+
+        document.getElementById('tab-local').classList.toggle('active',  isLocal);
+        document.getElementById('tab-ireland').classList.toggle('active', !isLocal);
+    }
+
+    function closeModal() {
+        document.getElementById('infoModal').style.display = 'none';
+        // モーダル画像を元に戻す
+        document.getElementById('modalImg').style.display = 'block';
+    }
+
+    function showGoalUnlockModal() {
+        document.getElementById('modalTitle').innerHTML = '🌈 ゴール解放！';
+        document.getElementById('modalImg').src = '';
+        document.getElementById('modalImg').style.display = 'none';
+        document.getElementById('modal-tabs').style.display = 'none';
+        document.getElementById('modalImgIreland').style.display = 'none';
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center; padding: 10px 0;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🌈</div>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--dark-green);">
+                    七色の虹をたどり着いたあなたへ。<br>麓には黄金が待っていました。<br>今日この街で出会ったすべてが、宝物です。🌈
+                </p>
+                <p>ゴールの場所が解放されました。<br>
+                <strong>難波エリア・太左衛門橋</strong>を目指してください！</p>
+                <p style="font-size: 0.85rem; color: #777;">地図にゴールのピンが表示されています。</p>
+            </div>`;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+    function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    // ノベルティスライドボタン
+    // 汎用スライダー初期化（thumbId, wrapId, doneId, storageKeySuffix）
+    function initSlider(thumbId, wrapId, doneId, keySuffix) {
+        const thumb = document.getElementById(thumbId);
+        const wrap  = document.getElementById(wrapId);
+        const done  = document.getElementById(doneId);
+        if (!thumb || !wrap) return;
+
+        const key = storageKey + keySuffix;
+        if (localStorage.getItem(key) === 'done') {
+            wrap.style.display = 'none';
+            done.style.display = 'block';
+            return;
+        }
+
+        let startX = 0, isDragging = false;
+        const maxSlide = () => wrap.offsetWidth - 44 - 8;
+
+        const onStart = (e) => {
+            isDragging = true;
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - parseInt(thumb.style.left || 4);
+            thumb.style.cursor = 'grabbing';
+        };
+        const onMove = (e) => {
+            if (!isDragging) return;
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+            thumb.style.left = Math.max(4, Math.min(x, maxSlide())) + 'px';
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            thumb.style.cursor = 'grab';
+            if (parseInt(thumb.style.left) >= maxSlide() - 10) {
+                localStorage.setItem(key, 'done');
+                wrap.style.display = 'none';
+                done.style.display = 'block';
+            } else {
+                thumb.style.left = '4px';
+            }
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, {passive: true});
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, {passive: true});
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+    }
+
+    function initNoveltySlider() {
+        initSlider('postcard-thumb', 'postcard-slide-wrap', 'postcard-done', '_postcard');
+        initSlider('sticker-thumb',  'sticker-slide-wrap',  'sticker-done',  '_sticker');
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
