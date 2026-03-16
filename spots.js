@@ -259,7 +259,7 @@
         "13": {
             name: "🌈 虹の麓の黄金<br>(太左衛門橋・GOAL)",
             lat: 34.6690596, lng: 135.5032575,
-            arUrl: "https://osakainj-dev.github.io/my-ARstamp-rally/AR_anime1.html",
+            arUrl: "https://injosaka.github.io/ARstamp-rally2026/AR_anime1.html",
             imgUrl: "./img/AR_info/resized_13_Osaka.png", imgIreland: "./img/AR_info/resized_13_Ireland.png",
             description: `<b>【太左衛門橋・道頓堀】</b><br>
                 江戸時代初期、歌舞伎の興行師「大坂太左衛門」にちなんで名付けられた道頓堀川の橋。
