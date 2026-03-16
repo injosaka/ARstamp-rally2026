@@ -636,6 +636,24 @@
         initSlider('sticker-thumb',  'sticker-slide-wrap',  'sticker-done',  '_sticker');
     }
 
+
+// index.html の末尾（<script>タグ内）に追加
+function checkAdminMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    // URLの末尾に ?mode=secret2026 を付けた時だけ admin.js を読み込む
+    if (urlParams.get('mode') === 'secret2026') { 
+        const script = document.createElement('script');
+        script.src = './admin.js';
+        document.body.appendChild(script);
+    }
+}
+
+window.onload = () => {
+    init();
+    checkAdminMode();
+};
+
+    
     window.onload = init;
 </script>
 </body>
