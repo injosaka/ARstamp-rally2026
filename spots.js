@@ -50,7 +50,7 @@
         "3": {
             name: "妖精のダンス<br>(なんばグランド花月)",
             lat: 34.6649869, lng: 135.5036556,
-            arUrl: "https://palanar.app/v2/ar_contents/5f3b9a2d7e814c6b",
+            arUrl: "https://palanar.app/v2/ar_contents/485172156f87b9b1",
             imgUrl: "./img/AR_info/resized_03_Osaka.png", imgIreland: "./img/AR_info/resized_03_Ireland.png",
             description: `<b>【なんばグランド花月（NGK）】</b><br>
                 1987年開場の吉本興業の「笑いの殿堂」。年間来場者100万人超、858席を誇る国内最大級のお笑い専門劇場です。
@@ -136,7 +136,7 @@
         "7": {
             name: "黄金の輪<br>(京都　知恩院・マグナスリン)",
             lat: 35.0048, lng: 135.7821,
-            arUrl: "https://palanar.app/v2/ar_contents/a8d2e4f1c9b35a70",
+            arUrl: "https://mywebar.com/p/Project_2_l665899koo",
             imgUrl: "./img/AR_info/resized_07_Osaka.png", imgIreland: "./img/AR_info/resized_07_Ireland.png",
             description: `<b>【知恩院】</b><br>
                 1175年、浄土宗開祖・法然上人ゆかりの地に建つ総本山。
@@ -155,7 +155,7 @@
         "8": {
             name: "スロンチャ！の鐘<br>(神戸・メリケンパーク)",
             lat: 34.6822937, lng: 135.1886448,
-            arUrl: "https://mywebar.com/p/Project_2_l665899koo",
+            arUrl: "https://palanar.app/v2/ar_contents/5f3b9a2d7e814c6b",
             imgUrl: "./img/AR_info/resized_08_Osaka.png", imgIreland: "./img/AR_info/resized_08_Ireland.png",
             description: `<b>【メリケンパーク】</b><br>
                 明治元年（1868年）の神戸開港とともに整備された「メリケン波止場」跡地に造られた公園。
@@ -177,7 +177,7 @@
         "9": {
             name: "守護聖人の書<br>(神戸・カトリック神戸中央教会)",
             lat: 34.6973653, lng: 135.1904805,
-            arUrl: "https://mywebar.com/p/Project_1_fx92v84jzv",
+            arUrl: "https://mywebar.com/p/Project_3_oyv9ak09eb",
             imgUrl: "./img/AR_info/resized_09_Osaka.png", imgIreland: "./img/AR_info/resized_09_Ireland.png",
             description: `<b>【カトリック神戸中央教会】</b><br>
                 起源は1868年の神戸開港翌年にフランス人神父が開設した伝道所。
@@ -218,7 +218,7 @@
         "11": {
             name: "緑の谷<br>(南御堂)",
             lat: 34.6805, lng: 135.4995,
-            arUrl: "https://mywebar.com/p/Project_3_oyv9ak09eb",
+            arUrl: "https://mywebar.com/p/Project_1_fx92v84jzv",
             imgUrl: "./img/AR_info/resized_11_Osaka.png", imgIreland: "./img/AR_info/resized_11_Ireland.png",
             description: `<b>【南御堂（真宗大谷派難波別院）】</b><br>
                 1596年、豊臣秀吉の命で現在地に移転した浄土真宗の由緒ある寺院。
