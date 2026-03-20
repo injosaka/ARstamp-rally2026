@@ -1,14 +1,39 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     St. Patrick's Stamp Rally
+     Version: 2026-03-15
+     Timestamp: 20260315-120000
+     Changes: スポット名称更新 / 画像パスをimg/AR_info/に変更
+              モーダルタブでアイルランド説明文も切り替え対応（descriptionIreland）
+              ノベルティスライドをポストカード・ステッカーの2つに分割
+              協賛店舗（スポット1・2）に営業時間連動ピン色変更・時間外タップ不可機能追加
+              地図ピンのバグ修正（stamps未定義）
+              地図下に凡例追加
+              スポット03表題を「妖精のダンス」に変更
+              各スポットに日本語説明文追加（03〜13番）
+              モーダルタブ順序変更（アイルランド左・デフォルト表示）
+              タブ「現地」→「ラリースポット」に変更
+              壁紙A（3スタンプ）・壁紙B（ゴール）ダウンロードエリア追加
+              全スポット（01〜12番）のアイルランドタブ説明文追加
+              ゴール解放モーダルにコンプリートメッセージ追加・ARリンク削除
+              ゴール取得後にスタンプページへARボタン表示
+              アンケートをコンプ前後で表示切り替え（ムービー・試飲特典訴求）
+              ノベルティ文言をユーザー目線に変更
+              壁紙A・B URL設定済み
+              全13スポットARURL個別設定
+              スポット6にイベント起源エピソード追加
+              ゴール(13番)アイルランドタブ追加（セント・パトリックスデー説明）
+     ============================================================ -->
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>St. Patrick's Stamp Rally</title>
     <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./img/logo.png">
+    <link rel="apple-touch-icon" href="./logo.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="AR Stamp Rally">
+    <meta name="apple-mobile-web-app-title" content="Stamp Rally">
     <meta name="theme-color" content="#009a49">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -64,7 +89,13 @@
         .stamp-color-11 { background: #f0f0ff; } /* 青 */
         .stamp-color-12 { background: #f8f0ff; } /* 紫 */
 
-        /* 【削除メモ】ここに管理パネル用のCSS(#admin-panel等)がありましたが、削除しました。 */
+        #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
+        .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
+        .admin-btn-group { display: flex; gap: 5px; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
+        .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
+        .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
+        .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
@@ -80,19 +111,10 @@
     </style>
 </head>
 <body>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JEWV5037Q9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-JEWV5037Q9');
-</script>
 
 <div class="container">
     <div class="title-image-container">
-        <img src="./img/logo.png" alt="Logo" class="title-image">
+        <img src="./img/logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
     </div>
 
     <div class="guide-link-container">
@@ -109,8 +131,8 @@
     <div id="map"></div>
     <div style="display:flex; flex-wrap:wrap; gap:8px 16px; padding:8px 4px; font-size:0.78rem; color:#555;">
         <span>📍 未取得</span>
-        <span>🍺 営業中（pub/レストラン系）</span>
-        <span>🕐 営業時間外（pub/レストラン系）</span>
+        <span>🍺 営業中（バー系）</span>
+        <span>🕐 営業時間外（バー系）</span>
         <span>☘️ 取得済み</span>
         <span>📱 現在地</span>
     </div>
@@ -120,6 +142,7 @@
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
 
+    <!-- 壁紙A（3スタンプ達成で表示） -->
     <div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
         <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
         <a id="wallpaper-a-link" href="#" target="_blank"
@@ -128,6 +151,7 @@
         </a>
     </div>
 
+    <!-- 壁紙B（ゴール達成で表示） -->
     <div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
         <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
         <a id="wallpaper-b-link" href="#" target="_blank"
@@ -136,9 +160,11 @@
         </a>
     </div>
 
+    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
     <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
         <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:12px;">🎁 スタッフにこの画面を見せてください<br><small style="color:#e05000;">※ご自身でスライドすると無効になります</small></p>
 
+        <!-- ポストカード -->
         <p style="font-size:0.8rem; color:#777; margin: 4px 0 4px 8px;">🌈 アイルランドポストカード（先着300名）</p>
         <div id="postcard-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden; margin-bottom:6px;">
             <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
@@ -153,6 +179,7 @@
             ✅ ポストカード渡し済み
         </div>
 
+        <!-- ステッカー -->
         <p style="font-size:0.8rem; color:#777; margin: 12px 0 4px 8px;">🍀 オリジナルステッカー（先着300名）<br><small style="color:#777;">※このイベントのSNS投稿が必要です</small></p>
         <div id="sticker-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
             <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
@@ -168,26 +195,38 @@
         </div>
     </div>
 
+    <!-- アンケートリンク -->
     <div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
+        <!-- コンプ前 -->
         <div id="enquete-normal">
-            <a href="https://forms.gle/iEag73ASS7dijyzs7" target="_blank"
+            <a id="enquete-normal-link" href="#" target="_blank"
                style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
                 📝 アンケートに答える
             </a>
         </div>
+        <!-- コンプ後 -->
         <div id="enquete-complete" style="display:none;">
             <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
                 🎬 アンケートにご回答いただいたメールアドレスに、スペシャルムービーのリンクを後日お送りします！<br><br>
                 🍺 アンケート完了画面をスタッフに見せると<b>試飲プレゼント</b>（先着100名）
             </p>
-            <a href="https://forms.gle/vdA6pyHQDNwNCP6K8" target="_blank"
+            <a id="enquete-complete-link" href="#" target="_blank"
                style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
                 📝 アンケートに答えて特典をもらう🎬🍺
             </a>
         </div>
     </div>
 
+    <div id="admin-panel">
+        <strong>🔧 管理者モード</strong><br>
+        <div id="current-gps-info" style="margin-bottom:10px;">GPS取得中...</div>
+        <div id="admin-list-container"></div>
+        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:15px; font-size:12px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
+        <textarea id="export-area" class="export-area"></textarea>
+        <button class="admin-btn" style="background:#444; width:100%; margin-top:10px;" onclick="location.reload()">🔄 画面を更新して反映</button>
+        <button class="admin-btn" style="background:#a22; width:100%; margin-top:20px;" onclick="resetAdminCoords()">全データ完全初期化</button>
     </div>
+</div>
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
 
@@ -207,6 +246,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="./spots.js"></script>
+<script src="./rewards.js"></script>
 <script>
     // GPS判定距離（km）50m = 0.05
     const GPS_RADIUS_KM = 0.05;
@@ -270,16 +310,24 @@
     const storageKey = 'rally_v2026_final';
     const GOAL_ID = "13";
     const REQUIRED_COUNT = 7;
-    /* 【削除メモ】tapCount変数を削除しました。 */
+    let tapCount = 0;
     let currentLat, currentLng;
 
-    /* 【削除メモ】ここに座標調整関数(applyAdminOffsets)がありましたが、削除しました。 */
+    function applyAdminOffsets() {
+        const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        for (let id in customCoords) {
+            if (targets[id]) {
+                if (customCoords[id].locations) targets[id].locations = customCoords[id].locations;
+                else { targets[id].lat = customCoords[id].lat; targets[id].lng = customCoords[id].lng; }
+            }
+        }
+    }
 
     function init() {
-        /* 【削除メモ】座標調整の実行(applyAdminOffsets())を削除しました。 */
+        applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
-        /* 【削除メモ】管理者用コンテナ取得変数を削除しました。 */
+        const adminContainer = document.getElementById('admin-list-container');
         
         for (let i = 1; i <= 13; i++) {
             const id = String(i);
@@ -296,7 +344,40 @@
                 gridMain.appendChild(div);
             }
 
-            /* 【削除メモ】ここにあった管理者用ボタン生成(row/group/saveLoc等)のループ処理を削除しました。 */
+            const row = document.createElement('div');
+            row.className = 'admin-row';
+            row.innerHTML = `<div>[${id}] ${targets[id].name}</div>`;
+            const group = document.createElement('div');
+            group.className = 'admin-btn-group';
+
+            if (id === "1") {
+                ["A", "B", "C"].forEach((label, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'admin-btn';
+                    btn.innerText = `登録-${label}`;
+                    btn.onclick = () => saveLoc('1', idx);
+                    group.appendChild(btn);
+                });
+            } else {
+                const btn = document.createElement('button');
+                btn.className = 'admin-btn';
+                btn.innerText = `現在地を登録`;
+                btn.onclick = () => saveLoc(id);
+                group.appendChild(btn);
+            }
+            const acquireBtn = document.createElement('button');
+            acquireBtn.className = 'admin-btn acquire-item-btn';
+            acquireBtn.innerText = '取得済み';
+            acquireBtn.onclick = () => acquireSingleStamp(id);
+            group.appendChild(acquireBtn);
+
+            const resetBtn = document.createElement('button');
+            resetBtn.className = 'admin-btn reset-item-btn';
+            resetBtn.innerText = '解除';
+            resetBtn.onclick = () => resetSingleStamp(id);
+            group.appendChild(resetBtn);
+            row.appendChild(group);
+            adminContainer.appendChild(row);
         }
         
         const center = targets["1"].locations[0];
@@ -336,7 +417,7 @@
             pos => {
                 currentLat = pos.coords.latitude;
                 currentLng = pos.coords.longitude;
-                /* 【削除メモ】管理者用デバッグ表示を削除しました。 */
+                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
 
                 // 現在地マーカーを更新（初回は作成、2回目以降は移動）
                 if (userMarker) {
@@ -353,7 +434,7 @@
                 }
             },
             err => {
-                /* 【削除メモ】GPS失敗デバッグ表示を削除しました。 */
+                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
             },
             opt
         );
@@ -502,7 +583,7 @@
         document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
 
         // 壁紙A：3スタンプ達成で表示
-        const wallpaperAUrl = "https://injosaka2026.my.canva.site/mk7px2nqwr";
+        const wallpaperAUrl = REWARDS.wallpaperA;
         const wallpaperAArea = document.getElementById('wallpaper-a-area');
         if (mainCount >= 3 && wallpaperAUrl) {
             document.getElementById('wallpaper-a-link').href = wallpaperAUrl;
@@ -512,7 +593,7 @@
         }
 
         // 壁紙B：ゴール取得で表示
-        const wallpaperBUrl = "https://injosaka2026.my.canva.site/rz8ew3symn";
+        const wallpaperBUrl = REWARDS.wallpaperB;
         const wallpaperBArea = document.getElementById('wallpaper-b-area');
         if (stamps.includes(GOAL_ID) && wallpaperBUrl) {
             document.getElementById('wallpaper-b-link').href = wallpaperBUrl;
@@ -522,6 +603,8 @@
         }
 
         // アンケート：ゴール取得後はスペシャルムービー訴求に切り替え
+        document.getElementById('enquete-normal-link').href = REWARDS.enqueteNormal;
+        document.getElementById('enquete-complete-link').href = REWARDS.enqueteComplete;
         if (stamps.includes(GOAL_ID)) {
             document.getElementById('enquete-normal').style.display = 'none';
             document.getElementById('enquete-complete').style.display = 'block';
@@ -531,7 +614,54 @@
         }
     }
 
-    /* 【削除メモ】ここに管理者用関数(saveLoc, acquireSingleStamp, resetSingleStamp, exportSettings, adminTrigger, resetAdminCoords)がありましたが、削除しました。 */
+    function saveLoc(id, idx = null) {
+        if (!currentLat) return;
+        const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        if (idx !== null) {
+            if (!c[id]) c[id] = { locations: [...targets[id].locations] };
+            c[id].locations[idx] = { lat: currentLat, lng: currentLng };
+        } else {
+            c[id] = { lat: currentLat, lng: currentLng };
+        }
+        localStorage.setItem('admin_coords', JSON.stringify(c));
+        alert(`${targets[id].name} を現在の座標で登録しました。画面を更新して反映してください。`);
+    }
+
+    function acquireSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(targets[id].name + ' を取得済みにしました。');
+        } else {
+            alert('すでに取得済みです。');
+        }
+    }
+
+    function resetSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const index = stamps.indexOf(id);
+        if (index > -1) {
+            stamps.splice(index, 1);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(`${targets[id].name} の獲得状況をリセットしました。`);
+        }
+    }
+
+    function exportSettings() {
+        applyAdminOffsets();
+        const area = document.getElementById('export-area');
+        area.style.display = 'block';
+        area.value = JSON.stringify(targets, null, 4);
+        area.select();
+        navigator.clipboard.writeText(area.value).catch(() => document.execCommand('copy'));
+        alert("設定をクリップボードにコピーしました。");
+    }
+
+    function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
+    function resetAdminCoords() { if (confirm("全て初期化しますか？")) { localStorage.clear(); location.reload(); } }
 
     let currentModalId = null;
 
@@ -645,24 +775,6 @@
         initSlider('sticker-thumb',  'sticker-slide-wrap',  'sticker-done',  '_sticker');
     }
 
-
-// index.html の末尾（<script>タグ内）に追加
-function checkAdminMode() {
-    const urlParams = new URLSearchParams(window.location.search);
-    // URLの末尾に ?mode=secret2026 を付けた時だけ admin.js を読み込む
-    if (urlParams.get('mode') === 'secret2026') { 
-        const script = document.createElement('script');
-        script.src = './admin.js';
-        document.body.appendChild(script);
-    }
-}
-
-window.onload = () => {
-    init();
-    checkAdminMode();
-};
-
-    
     window.onload = init;
 </script>
 </body>
