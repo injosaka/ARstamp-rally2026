@@ -33,7 +33,7 @@
             name: "ダブリンの扉<br>(Dublin Bay)",
             lat: 34.6688496, lng: 135.4998615,
             shopHours: { open: {h:17,m:0}, close: {h:24,m:0} }, // TODO: Dublin Bay営業時間要確認
-            arUrl: "https://palanar.app/v2/ar_contents/485172156f87b9b1",
+            arUrl: "https://palanar.app/v2/ar_contents/a8d2e4f1c9b35a70",
             imgUrl: "./img/AR_info/resized_02_Osaka.png", imgIreland: "./img/AR_info/resized_02_Ireland.png",
             description: `<b>【Dublin Bay】</b><br>
                 <br><small>🍺 <b>Dublin Bay</b><br>
