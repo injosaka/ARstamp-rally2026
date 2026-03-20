@@ -217,7 +217,7 @@
         },
         "11": {
             name: "緑の谷<br>(南御堂)",
-            lat: 34.6805, lng: 135.4995,
+            lat: 34.70282, lng: 135.49494,
             arUrl: "https://mywebar.com/p/Project_1_fx92v84jzv",
             imgUrl: "./img/AR_info/resized_11_Osaka.png", imgIreland: "./img/AR_info/resized_11_Ireland.png",
             description: `<b>【南御堂（真宗大谷派難波別院）】</b><br>
