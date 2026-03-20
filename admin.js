@@ -1,4 +1,7 @@
+// ============================================================
 // admin.js - 管理者専用機能
+// アクセス方法: URL末尾に ?mode=secret2026 を付ける
+// ============================================================
 (function() {
     // 1. 管理画面のスタイル（CSS）を注入
     const style = document.createElement('style');
@@ -27,9 +30,17 @@
     `;
     document.querySelector('.container').appendChild(adminDiv);
 
+    // GPS情報の表示を更新するオブザーバー（currentLatが更新されたらGPS表示に反映）
+    const gpsInterval = setInterval(() => {
+        if (typeof currentLat !== 'undefined' && currentLat) {
+            document.getElementById('current-gps-info').innerText =
+                `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+        }
+    }, 2000);
+
     // 3. 管理用関数をグローバルに定義
     window.saveLoc = function(id, idx = null) {
-        if (!currentLat) return;
+        if (!currentLat) { alert('GPS未取得です'); return; }
         const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
         if (idx !== null) {
             if (!c[id]) c[id] = { locations: [...targets[id].locations] };
@@ -38,7 +49,7 @@
             c[id] = { lat: currentLat, lng: currentLng };
         }
         localStorage.setItem('admin_coords', JSON.stringify(c));
-        alert(`${targets[id].name} を現在の座標で登録しました。`);
+        alert(`${targets[id].name} を現在の座標で登録しました。\n更新ボタンで反映してください。`);
     };
 
     window.acquireSingleStamp = function(id) {
@@ -48,6 +59,8 @@
             localStorage.setItem(storageKey, JSON.stringify(stamps));
             updateDisplay();
             alert(targets[id].name + ' を取得済みにしました。');
+        } else {
+            alert('すでに取得済みです。');
         }
     };
 
@@ -63,12 +76,14 @@
     };
 
     window.exportSettings = function() {
-        applyAdminOffsets();
+        // applyAdminOffsetsは本番では削除済みのため、targetsをそのまま出力
+        const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        const output = { targets_snapshot: targets, admin_coords: c };
         const area = document.getElementById('export-area');
         area.style.display = 'block';
-        area.value = JSON.stringify(targets, null, 4);
+        area.value = JSON.stringify(output, null, 4);
         area.select();
-        navigator.clipboard.writeText(area.value);
+        navigator.clipboard.writeText(area.value).catch(() => document.execCommand('copy'));
         alert("設定をクリップボードにコピーしました。");
     };
 
@@ -97,15 +112,23 @@
         } else {
             const btn = document.createElement('button');
             btn.className = 'admin-btn';
-            btn.innerText = `現在地を登録`;
+            btn.innerText = '現在地を登録';
             btn.onclick = () => saveLoc(id);
             group.appendChild(btn);
         }
-        
-        group.innerHTML += `
-            <button class="admin-btn acquire-item-btn" onclick="acquireSingleStamp('${id}')">取得</button>
-            <button class="admin-btn reset-item-btn" onclick="resetSingleStamp('${id}')">解除</button>
-        `;
+
+        const acquireBtn = document.createElement('button');
+        acquireBtn.className = 'admin-btn acquire-item-btn';
+        acquireBtn.innerText = '取得';
+        acquireBtn.onclick = () => acquireSingleStamp(id);
+        group.appendChild(acquireBtn);
+
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'admin-btn reset-item-btn';
+        resetBtn.innerText = '解除';
+        resetBtn.onclick = () => resetSingleStamp(id);
+        group.appendChild(resetBtn);
+
         row.appendChild(group);
         adminContainer.appendChild(row);
     }
