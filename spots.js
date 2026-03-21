@@ -154,7 +154,7 @@
         },
         "8": {
             name: "スロンチャ！の鐘<br>(神戸・メリケンパーク)",
-            lat: 34.6822937, lng: 135.1886448,
+            lat: 34.68271, lng: 135.18922,
             arUrl: "https://palanar.app/v2/ar_contents/5f3b9a2d7e814c6b",
             imgUrl: "./img/AR_info/resized_08_Osaka.png", imgIreland: "./img/AR_info/resized_08_Ireland.png",
             description: `<b>【メリケンパーク】</b><br>
