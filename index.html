@@ -412,32 +412,43 @@
     }
 
     function startGps() {
-        const opt = { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 };
-        navigator.geolocation.watchPosition(
-            pos => {
-                currentLat = pos.coords.latitude;
-                currentLng = pos.coords.longitude;
-                document.getElementById('current-gps-info').innerText = `現在地: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+        const onSuccess = (pos) => {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
 
-                // 現在地マーカーを更新（初回は作成、2回目以降は移動）
-                if (userMarker) {
-                    userMarker.setLatLng([currentLat, currentLng]);
-                } else {
-                    userMarker = L.marker([currentLat, currentLng], {
-                        icon: L.divIcon({
-                            className: 'custom-marker',
-                            html: '📱',
-                            iconSize: [30, 30]
-                        }),
-                        zIndexOffset: 1000
-                    }).addTo(map).bindPopup('現在地');
-                }
-            },
-            err => {
-                document.getElementById('current-gps-info').innerText = `GPS取得失敗: ${err.message}`;
-            },
-            opt
-        );
+            // 現在地マーカーを更新（初回は作成、2回目以降は移動）
+            if (userMarker) {
+                userMarker.setLatLng([currentLat, currentLng]);
+            } else {
+                userMarker = L.marker([currentLat, currentLng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '📱',
+                        iconSize: [30, 30]
+                    }),
+                    zIndexOffset: 1000
+                }).addTo(map).bindPopup('現在地');
+            }
+        };
+
+        const onError = (err) => {
+            // タイムアウト時は精度を落として再試行
+            if (err.code === err.TIMEOUT) {
+                navigator.geolocation.getCurrentPosition(
+                    onSuccess,
+                    () => {},
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+                );
+            }
+        };
+
+        // watchPositionで継続監視（タイムアウト延長・キャッシュなし）
+        navigator.geolocation.watchPosition(onSuccess, onError,
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+
+        // 初回はgetCurrentPositionでも即時取得を試みる
+        navigator.geolocation.getCurrentPosition(onSuccess, onError,
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
     }
 
     function checkLocation() {
