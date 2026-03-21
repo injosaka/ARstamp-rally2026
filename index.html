@@ -437,7 +437,19 @@
     }
 
     function checkLocation() {
-        if (!currentLat) { alert("GPSを取得中です。少し待ってからもう一度お試しください。"); return; }
+        if (!currentLat) {
+            // GPS未取得の場合、その場で取得を試みる
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    currentLat = pos.coords.latitude;
+                    currentLng = pos.coords.longitude;
+                    checkLocation(); // 取得後に再実行
+                },
+                () => { alert("GPS取得に失敗しました。\niPhone設定→Safari→位置情報→使用中のみ許可\nを確認してリロードしてください。"); },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+            return;
+        }
         let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
         const mainCount = stamps.filter(id => id != GOAL_ID).length;
         let foundId = null;
