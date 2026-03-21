@@ -425,6 +425,15 @@
                 document.getElementById('gps-debug').innerText = `取得済: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
                 currentLat = pos.coords.latitude;
                 currentLng = pos.coords.longitude;
+                // 地図マーカーも更新
+                if (userMarker) {
+                    userMarker.setLatLng([currentLat, currentLng]);
+                } else if (map) {
+                    userMarker = L.marker([currentLat, currentLng], {
+                        icon: L.divIcon({ className: 'custom-marker', html: '📱', iconSize: [30, 30] }),
+                        zIndexOffset: 1000
+                    }).addTo(map).bindPopup('現在地');
+                }
             },
             err => {
                 const codes = {1:'許可なし', 2:'位置情報取得不可', 3:'タイムアウト'};
