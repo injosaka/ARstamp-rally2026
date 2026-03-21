@@ -138,6 +138,8 @@
     </div>
     <div id="status">スタンプを集めよう！</div>
     <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
+    <div id="gps-debug" style="text-align:center; font-size:0.75rem; color:#888; margin-top:-15px; margin-bottom:10px;">GPS待機中...</div>
+    <button onclick="debugGps()" style="width:100%; padding:8px; background:#888; color:white; border:none; border-radius:20px; font-size:0.8rem; margin-bottom:10px; cursor:pointer;">🔍 GPS状態を確認</button>
 
     <div class="stamp-grid" id="stamp-grid-main"></div>
     <div class="goal-container" id="goal-area"></div>
@@ -217,15 +219,7 @@
         </div>
     </div>
 
-    <div id="admin-panel">
-        <strong>🔧 管理者モード</strong><br>
-        <div id="current-gps-info" style="margin-bottom:10px;">GPS取得中...</div>
-        <div id="admin-list-container"></div>
-        <button class="admin-btn" style="background:var(--irish-green); width:100%; margin-top:15px; font-size:12px;" onclick="exportSettings()">✅ 設定を書き出し (シリアル化)</button>
-        <textarea id="export-area" class="export-area"></textarea>
-        <button class="admin-btn" style="background:#444; width:100%; margin-top:10px;" onclick="location.reload()">🔄 画面を更新して反映</button>
-        <button class="admin-btn" style="background:#a22; width:100%; margin-top:20px;" onclick="resetAdminCoords()">全データ完全初期化</button>
-    </div>
+    <!-- 管理パネルはadmin.jsで動的生成 -->
 </div>
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
@@ -449,6 +443,33 @@
         // 初回はgetCurrentPositionでも即時取得を試みる
         navigator.geolocation.getCurrentPosition(onSuccess, onError,
             { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    }
+
+    function debugGps() {
+        if (!navigator.geolocation) {
+            alert("このブラウザはGPSに対応していません");
+            return;
+        }
+        document.getElementById('gps-debug').innerText = 'GPS取得中...';
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                const msg = `✅ GPS取得成功！
+緯度: ${pos.coords.latitude.toFixed(5)}
+経度: ${pos.coords.longitude.toFixed(5)}
+精度: ${pos.coords.accuracy.toFixed(0)}m`;
+                alert(msg);
+                document.getElementById('gps-debug').innerText = `取得済: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+                currentLat = pos.coords.latitude;
+                currentLng = pos.coords.longitude;
+            },
+            err => {
+                const codes = {1:'許可なし', 2:'位置情報取得不可', 3:'タイムアウト'};
+                alert(`❌ GPSエラー: ${codes[err.code] || err.message}
+コード: ${err.code}`);
+                document.getElementById('gps-debug').innerText = `エラー: ${codes[err.code]}`;
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
     }
 
     function checkLocation() {
