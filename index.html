@@ -321,6 +321,746 @@
         applyAdminOffsets();
         const gridMain = document.getElementById('stamp-grid-main');
         const goalArea = document.getElementById('goal-area');
+        
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
+            const div = document.createElement('div');
+            div.id = `stamp-${id}`;
+            if (id === GOAL_ID) {
+                div.className = 'stamp goal';
+                div.innerHTML = `<span id="goal-name">🔒 7つのスタンプを集めて</span><div id="goal-btns" style="display:none;"><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" class="btn-ui ar-btn" id="ar-link-${id}" target="_blank">☘️ AR</a></div>`;
+                goalArea.appendChild(div);
+            } else {
+                div.className = `stamp stamp-color-${id}`;
+                div.style.background = 'white';
+                div.innerHTML = `<span>${targets[id].name}</span><div class="btn-ui detail-btn" onclick="openModal('${id}')">🔍 解説</div><a href="#" id="ar-link-${id}" class="btn-ui ar-btn" target="_blank">☘️ AR</a>`;
+                gridMain.appendChild(div);
+            }
+        }
+        
+        const center = targets["1"].locations[0];
+        map = L.map('map').setView([center.lat, center.lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // マーカー配置も数字順で統一（ゴールは最初は地図に載せない）
+        const stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
+            markers[id] = [];
+            if (id === GOAL_ID) continue; // ゴールは後でunlockされたときに追加
+            const t = targets[id];
+            const popupContent = `<strong>${t.name}</strong><br><button onclick="openModal('${id}')" style="margin-top:5px;font-size:10px;cursor:pointer;">解説を見る</button>`;
+            
+            if (t.locations) {
+                t.locations.forEach((loc, idx) => {
+                    const icon = getMarkerIcon(id, id === '1' ? idx : null, stamps);
+                    const m = L.marker([loc.lat, loc.lng], {icon: L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
+                    markers[id].push(m);
+                });
+            } else {
+                const icon = getMarkerIcon(id, null, stamps);
+                const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
+                markers[id].push(m);
+            }
+        }
+        updateDisplay();
+        startGps();
+        // 営業時間に応じてマーカーを1分ごとに自動更新
+        setInterval(refreshShopMarkers, 60 * 1000);
+    }
+
+    function startGps() {
+        const onSuccess = (pos) => {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
+
+            // 現在地マーカーを更新（初回は作成、2回目以降は移動）
+            if (userMarker) {
+                userMarker.setLatLng([currentLat, currentLng]);
+            } else {
+                userMarker = L.marker([currentLat, currentLng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '📱',
+                        iconSize: [30, 30]
+                    }),
+                    zIndexOffset: 1000
+                }).addTo(map).bindPopup('現在地');
+            }
+        };
+
+        const onError = (err) => {
+            // タイムアウト時は精度を落として再試行
+            if (err.code === err.TIMEOUT) {
+                navigator.geolocation.getCurrentPosition(
+                    onSuccess,
+                    () => {},
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+                );
+            }
+        };
+
+        // watchPositionで継続監視（タイムアウト延長・キャッシュなし）
+        navigator.geolocation.watchPosition(onSuccess, onError,
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+
+        // 初回はgetCurrentPositionでも即時取得を試みる
+        navigator.geolocation.getCurrentPosition(onSuccess, onError,
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    }
+
+    function debugGps() {
+        if (!navigator.geolocation) {
+            alert("このブラウザはGPSに対応していません");
+            return;
+        }
+        document.getElementById('gps-debug').innerText = 'GPS取得中...';
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                const msg = `✅ GPS取得成功！
+緯度: ${pos.coords.latitude.toFixed(5)}
+経度: ${pos.coords.longitude.toFixed(5)}
+精度: ${pos.coords.accuracy.toFixed(0)}m`;
+                alert(msg);
+                document.getElementById('gps-debug').innerText = `取得済: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+                currentLat = pos.coords.latitude;
+                currentLng = pos.coords.longitude;
+            },
+            err => {
+                const codes = {1:'許可なし', 2:'位置情報取得不可', 3:'タイムアウト'};
+                alert(`❌ GPSエラー: ${codes[err.code] || err.message}
+コード: ${err.code}`);
+                document.getElementById('gps-debug').innerText = `エラー: ${codes[err.code]}`;
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+    function checkLocation() {
+        if (!currentLat) { alert("GPSを取得中です。少し待ってからもう一度お試しください。"); return; }
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const mainCount = stamps.filter(id => id != GOAL_ID).length;
+        let foundId = null;
+
+        // 数字順で判定（for...inのランダム順バグを修正）
+        for (let i = 1; i <= 13; i++) {
+            const id = String(i);
+            const t = targets[id];
+
+            // locations（複数座標）の場合：最近接のサブスポットを特定
+            let nearestSubIdx = null;
+            let dist;
+            if (t.locations) {
+                let minDist = Infinity;
+                t.locations.forEach((l, idx) => {
+                    const d = getDist(currentLat, currentLng, l.lat, l.lng);
+                    if (d < minDist) { minDist = d; nearestSubIdx = idx; }
+                });
+                dist = minDist;
+            } else {
+                dist = getDist(currentLat, currentLng, t.lat, t.lng);
+            }
+
+            if (dist < GPS_RADIUS_KM) {
+                if (id == GOAL_ID && mainCount < REQUIRED_COUNT) {
+                    alert("まだゴールは開いていません！"); return;
+                }
+
+                // 協賛店舗の営業時間チェック（取得済みの場合はスキップ）
+                if (!stamps.includes(id)) {
+                    const status = getShopStatus(id, nearestSubIdx);
+                    if (status === false) {
+                        const loc = t.locations ? t.locations[nearestSubIdx] : null;
+                        const shopName = loc?.label || t.name.replace(/<[^>]+>/g, '');
+                        const openHour = (loc?.open || t.shopHours?.open);
+                        const openStr = openHour ? `${openHour.h}:${String(openHour.m).padStart(2,'0')}` : '';
+                        alert(`🕐 現在 ${shopName} は営業時間外です。\n${openStr ? `営業開始：${openStr}〜` : ''}\n\nスタンプはお店が開いている時間にお越しください🍺`);
+                        return;
+                    }
+                }
+
+                foundId = id; break;
+            }
+        }
+
+        if (foundId) {
+            if (!stamps.includes(foundId)) {
+                stamps.push(foundId);
+                localStorage.setItem(storageKey, JSON.stringify(stamps));
+                updateDisplay();
+                alert("☘️ おめでとう！スタンプをゲット！");
+            } else {
+                alert("このスポットは獲得済みです！");
+            }
+        } else {
+            alert("近くにスポットがありません。");
+        }
+    }
+
+    function updateDisplay() {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const mainCount = stamps.filter(id => id != GOAL_ID).length;
+        
+        // 全スタンプをリセット（未取得→白背景）
+        for (let i = 1; i <= 13; i++) {
+            const el = document.getElementById("stamp-" + i);
+            el?.classList.remove("active");
+            if (el && i < 13) el.style.background = 'white';
+            const ar = document.getElementById("ar-link-" + i);
+            if (ar) ar.style.display = "none";
+        }
+
+        // 取得済みスタンプに虹色を適用
+        stamps.forEach(id => {
+            const el = document.getElementById("stamp-" + id);
+            el?.classList.add("active");
+            if (el && id != GOAL_ID) el.style.background = ''; // CSSクラスの色を有効化
+            const ar = document.getElementById("ar-link-" + id);
+            if (ar) { ar.href = targets[id].arUrl; ar.style.display = "block"; }
+            // ゴール以外は取得済み☘️（協賛店含む）
+            if (id != GOAL_ID) {
+                markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'☘️', iconSize:[30,30]})));
+            } else {
+                markers[id].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'🌈', iconSize:[30,30]})));
+            }
+        });
+
+        // 未取得の協賛店マーカーを営業時間で更新
+        refreshShopMarkers();
+
+        const wasLocked = markers[GOAL_ID].length === 0;
+        if (mainCount >= REQUIRED_COUNT) {
+            const goalEl = document.getElementById("stamp-" + GOAL_ID);
+            goalEl.classList.add("ready");
+            document.getElementById("goal-name").innerHTML = targets[GOAL_ID].name;
+            document.getElementById("goal-btns").style.display = "flex";
+            // ゴールARリンクをセット（取得前でも解説ボタンと並べて表示）
+            const goalArLink = document.getElementById('ar-link-' + GOAL_ID);
+            if (goalArLink) { goalArLink.href = targets[GOAL_ID].arUrl; goalArLink.style.display = 'inline-block'; }
+
+            // ゴールマーカーをまだ追加していなければ追加
+            if (markers[GOAL_ID].length === 0) {
+                const t = targets[GOAL_ID];
+                const popupContent = `<strong>${t.name}</strong><br><button onclick="openModal('${GOAL_ID}')" style="margin-top:5px;font-size:10px;cursor:pointer;">解説を見る</button>`;
+                const icon = stamps.includes(GOAL_ID) ? '🌈' : '📍';
+                const m = L.marker([t.lat, t.lng], {icon: L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]})}).addTo(map).bindPopup(popupContent);
+                markers[GOAL_ID].push(m);
+
+                // 初めて解放された瞬間だけモーダルで通知（localStorageで既表示を管理）
+                const unlockShownKey = storageKey + '_unlock_shown';
+                if (wasLocked && !localStorage.getItem(unlockShownKey)) {
+                    localStorage.setItem(unlockShownKey, '1');
+                    setTimeout(() => {
+                        showGoalUnlockModal();
+                    }, 300);
+                }
+            }
+
+            // ゴール取得済みならARリンクを表示＋ノベルティスライドを表示
+            if (stamps.includes(GOAL_ID)) {
+                const arLink = document.getElementById('ar-link-' + GOAL_ID);
+                if (arLink) { arLink.href = targets[GOAL_ID].arUrl; arLink.style.display = 'inline-block'; }
+                const noveltyArea = document.getElementById('novelty-area');
+                if (noveltyArea.style.display === 'none') {
+                    noveltyArea.style.display = 'block';
+                    initNoveltySlider();
+                }
+            } else if (!stamps.includes(GOAL_ID)) {
+                markers[GOAL_ID].forEach(m => m.setIcon(L.divIcon({className:'custom-marker', html:'📍', iconSize:[30,30]})));
+            }
+        } else {
+            document.getElementById("stamp-" + GOAL_ID).classList.remove("ready");
+            document.getElementById("goal-name").innerHTML = `🔒 <span style="font-size:10px; color:#999;">難波エリアのどこか…</span>`;
+            document.getElementById("goal-btns").style.display = "none";
+            // ゴールマーカーを地図から削除
+            markers[GOAL_ID].forEach(m => map.removeLayer(m));
+            markers[GOAL_ID] = [];
+        }
+        document.getElementById("status").innerText = `集めたスタンプ: ${mainCount} / ${REQUIRED_COUNT}`;
+
+        // 壁紙A：3スタンプ達成で表示
+        const wallpaperAUrl = REWARDS.wallpaperA;
+        const wallpaperAArea = document.getElementById('wallpaper-a-area');
+        if (mainCount >= 3 && wallpaperAUrl) {
+            document.getElementById('wallpaper-a-link').href = wallpaperAUrl;
+            wallpaperAArea.style.display = 'block';
+        } else {
+            wallpaperAArea.style.display = 'none';
+        }
+
+        // 壁紙B：ゴール取得で表示
+        const wallpaperBUrl = REWARDS.wallpaperB;
+        const wallpaperBArea = document.getElementById('wallpaper-b-area');
+        if (stamps.includes(GOAL_ID) && wallpaperBUrl) {
+            document.getElementById('wallpaper-b-link').href = wallpaperBUrl;
+            wallpaperBArea.style.display = 'block';
+        } else {
+            wallpaperBArea.style.display = 'none';
+        }
+
+        // アンケート：ゴール取得後はスペシャルムービー訴求に切り替え
+        document.getElementById('enquete-normal-link').href = REWARDS.enqueteNormal;
+        document.getElementById('enquete-complete-link').href = REWARDS.enqueteComplete;
+        if (stamps.includes(GOAL_ID)) {
+            document.getElementById('enquete-normal').style.display = 'none';
+            document.getElementById('enquete-complete').style.display = 'block';
+        } else {
+            document.getElementById('enquete-normal').style.display = 'block';
+            document.getElementById('enquete-complete').style.display = 'none';
+        }
+    }
+
+    function saveLoc(id, idx = null) {
+        if (!currentLat) return;
+        const c = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        if (idx !== null) {
+            if (!c[id]) c[id] = { locations: [...targets[id].locations] };
+            c[id].locations[idx] = { lat: currentLat, lng: currentLng };
+        } else {
+            c[id] = { lat: currentLat, lng: currentLng };
+        }
+        localStorage.setItem('admin_coords', JSON.stringify(c));
+        alert(`${targets[id].name} を現在の座標で登録しました。画面を更新して反映してください。`);
+    }
+
+    function acquireSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        if (!stamps.includes(id)) {
+            stamps.push(id);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(targets[id].name + ' を取得済みにしました。');
+        } else {
+            alert('すでに取得済みです。');
+        }
+    }
+
+    function resetSingleStamp(id) {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const index = stamps.indexOf(id);
+        if (index > -1) {
+            stamps.splice(index, 1);
+            localStorage.setItem(storageKey, JSON.stringify(stamps));
+            updateDisplay();
+            alert(`${targets[id].name} の獲得状況をリセットしました。`);
+        }
+    }
+
+    function exportSettings() {
+        applyAdminOffsets();
+        const area = document.getElementById('export-area');
+        area.style.display = 'block';
+        area.value = JSON.stringify(targets, null, 4);
+        area.select();
+        navigator.clipboard.writeText(area.value).catch(() => document.execCommand('copy'));
+        alert("設定をクリップボードにコピーしました。");
+    }
+
+    function adminTrigger() { if (++tapCount >= 5) { document.getElementById('admin-panel').style.display = 'block'; tapCount = 0; } }
+    function resetAdminCoords() { if (confirm("全て初期化しますか？")) { localStorage.clear(); location.reload(); } }
+
+    let currentModalId = null;
+
+    function openModal(id) {
+        currentModalId = id;
+        document.getElementById('modalTitle').innerHTML = targets[id].name;
+        document.getElementById('modalImg').src = targets[id].imgUrl;
+        document.getElementById('modalImgIreland').src = targets[id].imgIreland || '';
+        const hasIreland = targets[id].imgIreland && targets[id].imgIreland !== "";
+        document.getElementById('modal-tabs').style.display = hasIreland ? 'flex' : 'none';
+        switchTab('ireland');
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+
+    function switchTab(tab) {
+        const isLocal = tab === 'local';
+        const t = currentModalId ? targets[currentModalId] : null;
+
+        // 画像切り替え
+        document.getElementById('modalImg').style.display        = isLocal ? 'block' : 'none';
+        document.getElementById('modalImgIreland').style.display = isLocal ? 'none'  : 'block';
+
+        // 本文切り替え（descriptionIrelandがあれば使う、なければdescriptionを流用）
+        if (t) {
+            const body = !isLocal && t.descriptionIreland
+                ? t.descriptionIreland
+                : t.description;
+            document.getElementById('modalBody').innerHTML = body;
+        }
+
+        document.getElementById('tab-local').classList.toggle('active',  isLocal);
+        document.getElementById('tab-ireland').classList.toggle('active', !isLocal);
+    }
+
+    function closeModal() {
+        document.getElementById('infoModal').style.display = 'none';
+        // モーダル画像を元に戻す
+        document.getElementById('modalImg').style.display = 'block';
+    }
+
+    function showGoalUnlockModal() {
+        document.getElementById('modalTitle').innerHTML = '🌈 ゴール解放！';
+        document.getElementById('modalImg').src = '';
+        document.getElementById('modalImg').style.display = 'none';
+        document.getElementById('modal-tabs').style.display = 'none';
+        document.getElementById('modalImgIreland').style.display = 'none';
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center; padding: 10px 0;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🌈</div>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--dark-green);">
+                    七色の虹をたどり着いたあなたへ。<br>麓には黄金が待っていました。<br>今日この街で出会ったすべてが、宝物です。🌈
+                </p>
+                <p>ゴールの場所が解放されました。<br>
+                <strong>難波エリア・太左衛門橋</strong>を目指してください！</p>
+                <p style="font-size: 0.85rem; color: #777;">地図にゴールのピンが表示されています。</p>
+            </div>`;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+    function getDist(lat1,lng1,lat2,lng2){const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+    // ノベルティスライドボタン
+    // 汎用スライダー初期化（thumbId, wrapId, doneId, storageKeySuffix）
+    function initSlider(thumbId, wrapId, doneId, keySuffix) {
+        const thumb = document.getElementById(thumbId);
+        const wrap  = document.getElementById(wrapId);
+        const done  = document.getElementById(doneId);
+        if (!thumb || !wrap) return;
+
+        const key = storageKey + keySuffix;
+        if (localStorage.getItem(key) === 'done') {
+            wrap.style.display = 'none';
+            done.style.display = 'block';
+            return;
+        }
+
+        let startX = 0, isDragging = false;
+        const maxSlide = () => wrap.offsetWidth - 44 - 8;
+
+        const onStart = (e) => {
+            isDragging = true;
+            startX = (e.touches ? e.touches[0].clientX : e.clientX) - parseInt(thumb.style.left || 4);
+            thumb.style.cursor = 'grabbing';
+        };
+        const onMove = (e) => {
+            if (!isDragging) return;
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+            thumb.style.left = Math.max(4, Math.min(x, maxSlide())) + 'px';
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            thumb.style.cursor = 'grab';
+            if (parseInt(thumb.style.left) >= maxSlide() - 10) {
+                localStorage.setItem(key, 'done');
+                wrap.style.display = 'none';
+                done.style.display = 'block';
+            } else {
+                thumb.style.left = '4px';
+            }
+        };
+
+        thumb.addEventListener('mousedown', onStart);
+        thumb.addEventListener('touchstart', onStart, {passive: true});
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, {passive: true});
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
+    }
+
+    function initNoveltySlider() {
+        initSlider('postcard-thumb', 'postcard-slide-wrap', 'postcard-done', '_postcard');
+        initSlider('sticker-thumb',  'sticker-slide-wrap',  'sticker-done',  '_sticker');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>    <meta name="theme-color" content="#009a49">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --irish-green: #009a49;
+            --gold: #ffcd00;
+            --dark-green: #00622d;
+            --cream: #f8f4e3;
+            --parchment: #fdf5e6;
+        }
+
+        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; }
+
+        .title-image-container { text-align: center; margin-bottom: 10px; width: 100%; }
+        .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
+
+        .guide-link-container { text-align: center; margin-bottom: 15px; }
+        .guide-btn { display: inline-block; padding: 8px 20px; background: white; color: var(--irish-green); border: 2px solid var(--irish-green); border-radius: 20px; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+
+        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; z-index: 1; }
+        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
+        
+        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; }
+
+        .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; position: relative; }
+        .stamp.goal { width: 100%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; grid-column: 1 / span 3; justify-content: center; gap: 6px; box-sizing: border-box; }
+        .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
+        .goal-container { margin-top: 10px; text-align: center; }
+        #goal-btns { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #goal-btns .btn-ui { width: 60%; min-width: 120px; }
+        
+        .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
+        .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
+        .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
+        
+        .stamp.active { border-style: solid; }
+        .stamp.active::before { content: '☘️'; font-size: 16px; }
+        .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
+
+        /* 虹グラデーション（3列×4行、1〜12番） */
+        .stamp-color-1  { background: #fff0f0; } /* 赤 */
+        .stamp-color-2  { background: #fff4f0; }
+        .stamp-color-3  { background: #fff8f0; } /* オレンジ */
+        .stamp-color-4  { background: #fffbf0; }
+        .stamp-color-5  { background: #fffff0; } /* 黄 */
+        .stamp-color-6  { background: #f8fff0; }
+        .stamp-color-7  { background: #f0fff0; } /* 黄緑 */
+        .stamp-color-8  { background: #f0fff4; }
+        .stamp-color-9  { background: #f0fff8; } /* 緑 */
+        .stamp-color-10 { background: #f0f8ff; } /* 水色 */
+        .stamp-color-11 { background: #f0f0ff; } /* 青 */
+        .stamp-color-12 { background: #f8f0ff; } /* 紫 */
+
+        #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
+        .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
+        .admin-btn-group { display: flex; gap: 5px; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
+        .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
+        .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
+        .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
+        .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; }
+
+        .tab-container { display: flex; gap: 8px; margin-bottom: 4px; }
+        .tab-btn { flex: 1; padding: 6px; border-radius: 20px; border: 2px solid var(--irish-green); background: white; color: var(--irish-green); font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+        .tab-btn.active { background: var(--irish-green); color: white; }
+
+        #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .custom-marker { font-size: 26px; text-align: center; cursor: pointer; line-height: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title-image-container">
+        <img src="./img/logo.png" alt="Logo" class="title-image" onclick="adminTrigger()">
+    </div>
+
+    <div class="guide-link-container">
+        <a href="https://injosaka2026.my.canva.site/ifo-ar-top/" class="guide-btn" target="_blank">☘️ 遊び方ガイドを見る</a>
+    </div>
+
+    <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
+        <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
+        <p style="margin: 5px 0 0 0;">12個の中から7つのスタンプを集めると、<br>
+            最終ポイントのロックが解除。<br>
+            虹の麓に隠されたゴールを目指せ！☘️</p>
+    </div>
+    
+    <div id="map"></div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px 16px; padding:8px 4px; font-size:0.78rem; color:#555;">
+        <span>📍 未取得</span>
+        <span>🍺 営業中（バー系）</span>
+        <span>🕐 営業時間外（バー系）</span>
+        <span>☘️ 取得済み</span>
+        <span>📱 現在地</span>
+    </div>
+    <div id="status">スタンプを集めよう！</div>
+    <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
+    <div id="gps-debug" style="text-align:center; font-size:0.75rem; color:#888; margin-top:-15px; margin-bottom:10px;">GPS待機中...</div>
+    <button onclick="debugGps()" style="width:100%; padding:8px; background:#888; color:white; border:none; border-radius:20px; font-size:0.8rem; margin-bottom:10px; cursor:pointer;">🔍 GPS状態を確認</button>
+
+    <div class="stamp-grid" id="stamp-grid-main"></div>
+    <div class="goal-container" id="goal-area"></div>
+
+    <!-- 壁紙A（3スタンプ達成で表示） -->
+    <div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
+        <a id="wallpaper-a-link" href="#" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📥 壁紙をダウンロード（Type-A）
+        </a>
+    </div>
+
+    <!-- 壁紙B（ゴール達成で表示） -->
+    <div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
+        <a id="wallpaper-b-link" href="#" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:var(--gold); color:var(--dark-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📥 壁紙をダウンロード（Type-B）
+        </a>
+    </div>
+
+    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
+    <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
+        <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:12px;">🎁 スタッフにこの画面を見せてください<br><small style="color:#e05000;">※ご自身でスライドすると無効になります</small></p>
+
+        <!-- ポストカード -->
+        <p style="font-size:0.8rem; color:#777; margin: 4px 0 4px 8px;">🌈 アイルランドポストカード（先着300名）</p>
+        <div id="postcard-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden; margin-bottom:6px;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スタッフがスライドします
+            </div>
+            <div id="postcard-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:var(--irish-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🌈
+            </div>
+        </div>
+        <div id="postcard-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold; margin-bottom:6px;">
+            ✅ ポストカード渡し済み
+        </div>
+
+        <!-- ステッカー -->
+        <p style="font-size:0.8rem; color:#777; margin: 12px 0 4px 8px;">🍀 オリジナルステッカー（先着300名）<br><small style="color:#777;">※このイベントのSNS投稿が必要です</small></p>
+        <div id="sticker-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スタッフがスライドします
+            </div>
+            <div id="sticker-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:#e8a020; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🍀
+            </div>
+        </div>
+        <div id="sticker-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold;">
+            ✅ ステッカー渡し済み
+        </div>
+    </div>
+
+    <!-- アンケートリンク -->
+    <div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
+        <!-- コンプ前 -->
+        <div id="enquete-normal">
+            <a id="enquete-normal-link" href="#" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答える
+            </a>
+        </div>
+        <!-- コンプ後 -->
+        <div id="enquete-complete" style="display:none;">
+            <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
+                🎬 アンケートにご回答いただいたメールアドレスに、スペシャルムービーのリンクを後日お送りします！<br><br>
+                🍺 アンケート完了画面をスタッフに見せると<b>試飲プレゼント</b>（先着100名）
+            </p>
+            <a id="enquete-complete-link" href="#" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答えて特典をもらう🎬🍺
+            </a>
+        </div>
+    </div>
+
+    <!-- 管理パネルはadmin.jsで動的生成 -->
+</div>
+
+<div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
+
+<div id="infoModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle" style="margin-top:0;"></h2>
+        <div class="tab-container" id="modal-tabs">
+            <button class="tab-btn active" id="tab-ireland" onclick="switchTab('ireland')">🍀 アイルランド</button>
+            <button class="tab-btn"        id="tab-local"   onclick="switchTab('local')">📍 ラリースポット</button>
+        </div>
+        <img id="modalImg" class="modal-image" src="">
+        <img id="modalImgIreland" class="modal-image" src="" style="display:none;">
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="./spots.js"></script>
+<script src="./rewards.js"></script>
+<script>
+    // GPS判定距離（km）50m = 0.05
+    const GPS_RADIUS_KM = 0.05;
+
+    // =============================================
+    // 営業時間判定（協賛店舗用）
+    // close.h が 24以上の場合は翌日扱い（例: 25時 = 翌1時）
+    // =============================================
+    function isShopOpen(hours) {
+        if (!hours) return null; // 営業時間データなし = 営業時間制限なし
+        const now = new Date();
+        const nowMins = now.getHours() * 60 + now.getMinutes();
+        const openMins  = hours.open.h  * 60 + hours.open.m;
+        const closeMins = hours.close.h * 60 + hours.close.m;
+        if (closeMins > 24 * 60) {
+            // 深夜営業（翌日まで）: 0:00〜close%24:00 OR open〜24:00
+            const closeWrapped = closeMins - 24 * 60;
+            return nowMins >= openMins || nowMins < closeWrapped;
+        }
+        return nowMins >= openMins && nowMins < closeMins;
+    }
+
+    // スポットIDとサブインデックス（locations[idx]）から営業状態を返す
+    // 戻り値: null=制限なし, true=営業中, false=営業時間外
+    function getShopStatus(id, subIdx = null) {
+        const t = targets[id];
+        if (t.locations && subIdx !== null) {
+            const loc = t.locations[subIdx];
+            if (!loc.open) return null;
+            return isShopOpen({ open: loc.open, close: loc.close });
+        }
+        if (t.shopHours) return isShopOpen(t.shopHours);
+        return null;
+    }
+
+    // マーカーアイコンを返す
+    // 取得済み: ☘️  営業中（未取得）: 🍺  営業時間外（未取得）: 🕐  通常: 📍
+    function getMarkerIcon(id, subIdx, stamps) {
+        if (stamps.includes(id)) return '☘️';
+        const status = getShopStatus(id, subIdx);
+        if (status === true)  return '🍺';
+        if (status === false) return '🕐';
+        return '📍';
+    }
+
+    // 全協賛店マーカーのアイコンを営業時間に合わせて更新
+    function refreshShopMarkers() {
+        let stamps = JSON.parse(localStorage.getItem(storageKey)) || [];
+        ['1', '2'].forEach(id => {
+            if (!markers[id]) return;
+            markers[id].forEach((m, idx) => {
+                const icon = getMarkerIcon(id, id === '1' ? idx : null, stamps);
+                m.setIcon(L.divIcon({className:'custom-marker', html:icon, iconSize:[30,30]}));
+            });
+        });
+    }
+
+    // スポットデータは spots.js で定義
+
+    let map, markers = {}, userMarker = null;
+    const storageKey = 'rally_v2026_final';
+    const GOAL_ID = "13";
+    const REQUIRED_COUNT = 7;
+    let tapCount = 0;
+    let currentLat, currentLng;
+
+    function applyAdminOffsets() {
+        const customCoords = JSON.parse(localStorage.getItem('admin_coords')) || {};
+        for (let id in customCoords) {
+            if (targets[id]) {
+                if (customCoords[id].locations) targets[id].locations = customCoords[id].locations;
+                else { targets[id].lat = customCoords[id].lat; targets[id].lng = customCoords[id].lng; }
+            }
+        }
+    }
+
+    function init() {
+        applyAdminOffsets();
+        const gridMain = document.getElementById('stamp-grid-main');
+        const goalArea = document.getElementById('goal-area');
         const adminContainer = document.getElementById('admin-list-container');
         
         for (let i = 1; i <= 13; i++) {
