@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <!-- ============================================================
      St. Patrick's Stamp Rally
      Version: 2026-03-15
@@ -25,7 +24,6 @@
               スポット6にイベント起源エピソード追加
               ゴール(13番)アイルランドタブ追加（セント・パトリックスデー説明）
      ============================================================ -->
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -47,73 +45,70 @@
             --parchment: #fdf5e6;
         }
 
-```
-    body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
-    .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; }
+        body { font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: var(--cream); color: var(--dark-green); margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; border: 4px double var(--gold); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; }
 
-    .title-image-container { text-align: center; margin-bottom: 10px; width: 100%; }
-    .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
+        .title-image-container { text-align: center; margin-bottom: 10px; width: 100%; }
+        .title-image { width: 100%; height: auto; max-width: 450px; display: block; margin: 0 auto; border-radius: 10px; cursor: pointer; }
 
-    .guide-link-container { text-align: center; margin-bottom: 15px; }
-    .guide-btn { display: inline-block; padding: 8px 20px; background: white; color: var(--irish-green); border: 2px solid var(--irish-green); border-radius: 20px; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
+        .guide-link-container { text-align: center; margin-bottom: 15px; }
+        .guide-btn { display: inline-block; padding: 8px 20px; background: white; color: var(--irish-green); border: 2px solid var(--irish-green); border-radius: 20px; font-weight: bold; text-decoration: none; font-size: 0.85rem; }
 
-    #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; z-index: 1; }
-    .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
-    
-    .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; }
+        #map { height: 250px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--irish-green); background: #eee; z-index: 1; }
+        .check-btn { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--irish-green); color: white; border: none; border-radius: 50px; box-shadow: 0 4px 0 var(--dark-green); margin-bottom: 20px; }
+        
+        .refresh-ui-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: white; border: 2px solid var(--gold); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 9999; cursor: pointer; }
 
-    .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-    .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; position: relative; }
-    .stamp.goal { width: 100%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; grid-column: 1 / span 3; justify-content: center; gap: 6px; box-sizing: border-box; }
-    .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
-    .goal-container { margin-top: 10px; text-align: center; }
-    #goal-btns { width: 100%; display: flex; flex-direction: column; align-items: center; }
-    #goal-btns .btn-ui { width: 60%; min-width: 120px; }
-    
-    .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
-    .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
-    .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
-    
-    .stamp.active { border-style: solid; }
-    .stamp.active::before { content: '☘️'; font-size: 16px; }
-    .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
+        .stamp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stamp { background: #fff; border: 1.5px dashed var(--irish-green); border-radius: 8px; padding: 8px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 125px; box-sizing: border-box; font-size: 11px; position: relative; }
+        .stamp.goal { width: 100%; border: 3px double #ccc; background: #eee; min-height: 160px; color: #999; grid-column: 1 / span 3; justify-content: center; gap: 6px; box-sizing: border-box; }
+        .stamp.goal.ready { border-color: var(--gold); background: #fffdf0; color: var(--dark-green); }
+        .goal-container { margin-top: 10px; text-align: center; }
+        #goal-btns { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #goal-btns .btn-ui { width: 60%; min-width: 120px; }
+        
+        .btn-ui { display: block; width: 90%; padding: 6px 0; margin: 2px 0; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; text-align: center; cursor: pointer; }
+        .detail-btn { background: white; color: var(--dark-green); border: 1px solid var(--gold); }
+        .ar-btn { background: var(--irish-green); color: white; border: none; display: none; }
+        
+        .stamp.active { border-style: solid; }
+        .stamp.active::before { content: '☘️'; font-size: 16px; }
+        .stamp.goal.active::before { content: '🌈'; font-size: 22px; }
 
-    /* 虹グラデーション（3列×4行、1〜12番） */
-    .stamp-color-1  { background: #fff0f0; } /* 赤 */
-    .stamp-color-2  { background: #fff4f0; }
-    .stamp-color-3  { background: #fff8f0; } /* オレンジ */
-    .stamp-color-4  { background: #fffbf0; }
-    .stamp-color-5  { background: #fffff0; } /* 黄 */
-    .stamp-color-6  { background: #f8fff0; }
-    .stamp-color-7  { background: #f0fff0; } /* 黄緑 */
-    .stamp-color-8  { background: #f0fff4; }
-    .stamp-color-9  { background: #f0fff8; } /* 緑 */
-    .stamp-color-10 { background: #f0f8ff; } /* 水色 */
-    .stamp-color-11 { background: #f0f0ff; } /* 青 */
-    .stamp-color-12 { background: #f8f0ff; } /* 紫 */
+        /* 虹グラデーション（3列×4行、1〜12番） */
+        .stamp-color-1  { background: #fff0f0; } /* 赤 */
+        .stamp-color-2  { background: #fff4f0; }
+        .stamp-color-3  { background: #fff8f0; } /* オレンジ */
+        .stamp-color-4  { background: #fffbf0; }
+        .stamp-color-5  { background: #fffff0; } /* 黄 */
+        .stamp-color-6  { background: #f8fff0; }
+        .stamp-color-7  { background: #f0fff0; } /* 黄緑 */
+        .stamp-color-8  { background: #f0fff4; }
+        .stamp-color-9  { background: #f0fff8; } /* 緑 */
+        .stamp-color-10 { background: #f0f8ff; } /* 水色 */
+        .stamp-color-11 { background: #f0f0ff; } /* 青 */
+        .stamp-color-12 { background: #f8f0ff; } /* 紫 */
 
-    #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
-    .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
-    .admin-btn-group { display: flex; gap: 5px; }
-    .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
-    .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
-    .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
-    .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
+        #admin-panel { display: none; background: #333; color: white; padding: 15px; margin-top: 20px; border-radius: 10px; font-size: 12px; }
+        .admin-row { border-bottom: 1px dotted #666; padding: 10px 0; display: flex; flex-direction: column; gap: 5px; }
+        .admin-btn-group { display: flex; gap: 5px; }
+        .admin-btn { padding: 8px; background: #555; border: 1px solid #777; color: white; border-radius: 4px; font-size: 9px; cursor: pointer; flex: 1; }
+        .reset-item-btn { background: #a55; border-color: #f77; max-width: 60px; }
+        .acquire-item-btn { background: #2a7; border-color: #4d9; max-width: 60px; }
+        .export-area { width: 100%; height: 100px; margin-top: 10px; background: #000; color: #0f0; font-family: monospace; font-size: 10px; display: none; }
 
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
-    .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
-    .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background-color: var(--parchment); width: 85%; max-width: 400px; padding: 20px; border-radius: 5px; border: 8px double var(--gold); position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 5px; right: 10px; font-size: 24px; cursor: pointer; }
+        .modal-image { width: 100%; height: 180px; object-fit: cover; border-radius: 5px; border: 2px solid var(--gold); margin: 10px 0; }
 
-    .tab-container { display: flex; gap: 8px; margin-bottom: 4px; }
-    .tab-btn { flex: 1; padding: 6px; border-radius: 20px; border: 2px solid var(--irish-green); background: white; color: var(--irish-green); font-weight: bold; font-size: 0.8rem; cursor: pointer; }
-    .tab-btn.active { background: var(--irish-green); color: white; }
+        .tab-container { display: flex; gap: 8px; margin-bottom: 4px; }
+        .tab-btn { flex: 1; padding: 6px; border-radius: 20px; border: 2px solid var(--irish-green); background: white; color: var(--irish-green); font-weight: bold; font-size: 0.8rem; cursor: pointer; }
+        .tab-btn.active { background: var(--irish-green); color: white; }
 
-    #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
-    .custom-marker { font-size: 26px; text-align: center; cursor: pointer; line-height: 1; }
-</style>
-```
-
+        #status { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .custom-marker { font-size: 26px; text-align: center; cursor: pointer; line-height: 1; }
+    </style>
 </head>
 <body>
 
@@ -122,112 +117,109 @@
         <img src="./img/logo.png" alt="Logo" class="title-image">
     </div>
 
-```
-<div class="guide-link-container">
-    <a href="https://injosaka2026.my.canva.site/ifo-ar-top/" class="guide-btn" target="_blank">☘️ 遊び方ガイドを見る</a>
-</div>
-
-<div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
-    <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
-    <p style="margin: 5px 0 0 0;">12個の中から7つのスタンプを集めると、<br>
-        最終ポイントのロックが解除。<br>
-        虹の麓に隠されたゴールを目指せ！☘️</p>
-</div>
-
-<div id="map"></div>
-<div style="display:flex; flex-wrap:wrap; gap:8px 16px; padding:8px 4px; font-size:0.78rem; color:#555;">
-    <span>📍 未取得</span>
-    <span>🍺 営業中（バー系）</span>
-    <span>🕐 営業時間外（バー系）</span>
-    <span>☘️ 取得済み</span>
-    <span>📱 現在地</span>
-</div>
-<div id="status">スタンプを集めよう！</div>
-<button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
-<div id="gps-debug" style="text-align:center; font-size:0.75rem; color:#888; margin-top:-15px; margin-bottom:10px;">GPS待機中...</div>
-<button onclick="debugGps()" style="width:100%; padding:8px; background:#888; color:white; border:none; border-radius:20px; font-size:0.8rem; margin-bottom:10px; cursor:pointer;">🔍 GPS状態を確認</button>
-
-<div class="stamp-grid" id="stamp-grid-main"></div>
-<div class="goal-container" id="goal-area"></div>
-
-<!-- 壁紙A（3スタンプ達成で表示） -->
-<div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
-    <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
-    <a id="wallpaper-a-link" href="#" target="_blank"
-       style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
-        📥 壁紙をダウンロード（Type-A）
-    </a>
-</div>
-
-<!-- 壁紙B（ゴール達成で表示） -->
-<div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
-    <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
-    <a id="wallpaper-b-link" href="#" target="_blank"
-       style="display:inline-block; padding:10px 24px; background:var(--gold); color:var(--dark-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
-        📥 壁紙をダウンロード（Type-B）
-    </a>
-</div>
-
-<!-- ノベルティスライドボタン（ゴール取得後に表示） -->
-<div id="novelty-area" style="display:none; margin: 20px 0 10px;">
-    <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:12px;">🎁 スタッフにこの画面を見せてください<br><small style="color:#e05000;">※ご自身でスライドすると無効になります</small></p>
-
-    <!-- ポストカード -->
-    <p style="font-size:0.8rem; color:#777; margin: 4px 0 4px 8px;">🌈 アイルランドポストカード（先着300名）</p>
-    <div id="postcard-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden; margin-bottom:6px;">
-        <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
-            → スタッフがスライドします
-        </div>
-        <div id="postcard-thumb"
-            style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:var(--irish-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
-            🌈
-        </div>
-    </div>
-    <div id="postcard-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold; margin-bottom:6px;">
-        ✅ ポストカード渡し済み
+    <div class="guide-link-container">
+        <a href="https://injosaka2026.my.canva.site/ifo-ar-top/" class="guide-btn" target="_blank">☘️ 遊び方ガイドを見る</a>
     </div>
 
-    <!-- ステッカー -->
-    <p style="font-size:0.8rem; color:#777; margin: 12px 0 4px 8px;">🍀 オリジナルステッカー（先着300名）<br><small style="color:#777;">※このイベントのSNS投稿が必要です</small></p>
-    <div id="sticker-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
-        <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
-            → スタッフがスライドします
-        </div>
-        <div id="sticker-thumb"
-            style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:#e8a020; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
-            🍀
-        </div>
+    <div class="intro-text" style="text-align: center; padding: 10px; font-size: 0.9rem; line-height: 1.5; color: var(--dark-green);">
+        <p style="margin: 0; font-weight: bold;">街を巡ってARスタンプを集めよう！</p>
+        <p style="margin: 5px 0 0 0;">12個の中から7つのスタンプを集めると、<br>
+            最終ポイントのロックが解除。<br>
+            虹の麓に隠されたゴールを目指せ！☘️</p>
     </div>
-    <div id="sticker-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold;">
-        ✅ ステッカー渡し済み
+    
+    <div id="map"></div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px 16px; padding:8px 4px; font-size:0.78rem; color:#555;">
+        <span>📍 未取得</span>
+        <span>🍺 営業中（バー系）</span>
+        <span>🕐 営業時間外（バー系）</span>
+        <span>☘️ 取得済み</span>
+        <span>📱 現在地</span>
     </div>
-</div>
+    <div id="status">スタンプを集めよう！</div>
+    <button class="check-btn" onclick="checkLocation()">現在地でスタンプ！</button>
+    <div id="gps-debug" style="text-align:center; font-size:0.75rem; color:#888; margin-top:-15px; margin-bottom:10px;">GPS待機中...</div>
+    <button onclick="debugGps()" style="width:100%; padding:8px; background:#888; color:white; border:none; border-radius:20px; font-size:0.8rem; margin-bottom:10px; cursor:pointer;">🔍 GPS状態を確認</button>
 
-<!-- アンケートリンク -->
-<div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
-    <!-- コンプ前 -->
-    <div id="enquete-normal">
-        <a id="enquete-normal-link" href="#" target="_blank"
-           style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
-            📝 アンケートに答える
-        </a>
-    </div>
-    <!-- コンプ後 -->
-    <div id="enquete-complete" style="display:none;">
-        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
-            🎬 アンケートにご回答いただいたメールアドレスに、スペシャルムービーのリンクを後日お送りします！<br><br>
-            🍺 アンケート完了画面をスタッフに見せると<b>試飲プレゼント</b>（先着100名）
-        </p>
-        <a id="enquete-complete-link" href="#" target="_blank"
+    <div class="stamp-grid" id="stamp-grid-main"></div>
+    <div class="goal-container" id="goal-area"></div>
+
+    <!-- 壁紙A（3スタンプ達成で表示） -->
+    <div id="wallpaper-a-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🎁 3スタンプ達成！デジタル壁紙をプレゼント</p>
+        <a id="wallpaper-a-link" href="#" target="_blank"
            style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
-            📝 アンケートに答えて特典をもらう🎬🍺
+            📥 壁紙をダウンロード（Type-A）
         </a>
     </div>
-</div>
 
-<!-- 管理パネルはadmin.jsで動的生成 -->
-```
+    <!-- 壁紙B（ゴール達成で表示） -->
+    <div id="wallpaper-b-area" style="display:none; margin: 16px 0 8px; text-align:center;">
+        <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">🌈 ゴール達成！スペシャル壁紙をプレゼント</p>
+        <a id="wallpaper-b-link" href="#" target="_blank"
+           style="display:inline-block; padding:10px 24px; background:var(--gold); color:var(--dark-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+            📥 壁紙をダウンロード（Type-B）
+        </a>
+    </div>
 
+    <!-- ノベルティスライドボタン（ゴール取得後に表示） -->
+    <div id="novelty-area" style="display:none; margin: 20px 0 10px;">
+        <p style="text-align:center; font-size:0.85rem; color:var(--dark-green); margin-bottom:12px;">🎁 スタッフにこの画面を見せてください<br><small style="color:#e05000;">※ご自身でスライドすると無効になります</small></p>
+
+        <!-- ポストカード -->
+        <p style="font-size:0.8rem; color:#777; margin: 4px 0 4px 8px;">🌈 アイルランドポストカード（先着300名）</p>
+        <div id="postcard-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden; margin-bottom:6px;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スタッフがスライドします
+            </div>
+            <div id="postcard-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:var(--irish-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🌈
+            </div>
+        </div>
+        <div id="postcard-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold; margin-bottom:6px;">
+            ✅ ポストカード渡し済み
+        </div>
+
+        <!-- ステッカー -->
+        <p style="font-size:0.8rem; color:#777; margin: 12px 0 4px 8px;">🍀 オリジナルステッカー（先着300名）<br><small style="color:#777;">※このイベントのSNS投稿が必要です</small></p>
+        <div id="sticker-slide-wrap" style="background:#e0e0e0; border-radius:50px; padding:4px; position:relative; height:52px; overflow:hidden;">
+            <div style="position:absolute; left:56px; right:8px; top:0; bottom:0; display:flex; align-items:center; font-size:0.8rem; color:#999; user-select:none; pointer-events:none;">
+                → スタッフがスライドします
+            </div>
+            <div id="sticker-thumb"
+                style="position:absolute; left:4px; top:4px; width:44px; height:44px; background:#e8a020; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:grab; touch-action:none; z-index:10;">
+                🍀
+            </div>
+        </div>
+        <div id="sticker-done" style="display:none; background:#aaa; color:white; border-radius:50px; padding:14px; text-align:center; font-weight:bold;">
+            ✅ ステッカー渡し済み
+        </div>
+    </div>
+
+    <!-- アンケートリンク -->
+    <div id="enquete-area" style="text-align:center; margin: 10px 0 20px;">
+        <!-- コンプ前 -->
+        <div id="enquete-normal">
+            <a id="enquete-normal-link" href="#" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:white; color:var(--irish-green); border:2px solid var(--irish-green); border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答える
+            </a>
+        </div>
+        <!-- コンプ後 -->
+        <div id="enquete-complete" style="display:none;">
+            <p style="font-size:0.85rem; color:var(--dark-green); margin-bottom:8px;">
+                🎬 アンケートにご回答いただいたメールアドレスに、スペシャルムービーのリンクを後日お送りします！<br><br>
+                🍺 アンケート完了画面をスタッフに見せると<b>試飲プレゼント</b>（先着100名）
+            </p>
+            <a id="enquete-complete-link" href="#" target="_blank"
+               style="display:inline-block; padding:10px 24px; background:var(--irish-green); color:white; border-radius:20px; font-weight:bold; font-size:0.85rem; text-decoration:none;">
+                📝 アンケートに答えて特典をもらう🎬🍺
+            </a>
+        </div>
+    </div>
+
+    <!-- 管理パネルはadmin.jsで動的生成 -->
 </div>
 
 <div class="refresh-ui-btn" onclick="location.reload()">🔄</div>
@@ -247,11 +239,8 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script src="./spots.js"></script>
-
 <script src="./rewards.js"></script>
-
 <script>
     // GPS判定距離（km）50m = 0.05
     const GPS_RADIUS_KM = 0.05;
@@ -784,6 +773,5 @@
 
     window.onload = init;
 </script>
-
 </body>
 </html>
